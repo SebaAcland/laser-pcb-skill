@@ -139,12 +139,13 @@ def generate_preview(out_dir: Path):
     except ImportError:
         print("\n  (pip install cairosvg para preview)")
 
-    # 2. PNG raster (alta resolución para modo raster)
+    # 2. PNG raster (alta resolución para modo raster, fondo blanco)
     rsvg = shutil.which("rsvg-convert")
     raster_out = out_dir / "pcb_raster.png"
     if rsvg:
         subprocess.run(
             [rsvg, "-f", "png", "-d", "250", "-p", "250",
+             "--background-color", "white",
              "-o", str(raster_out), str(traces)],
             capture_output=True, check=True
         )
