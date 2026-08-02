@@ -3,6 +3,33 @@
 Triggers: "preparar pcb para laser", "exportar pcb laser", "grabar pcb laser",
 "laser pcb", "generar gcode pcb", "exportar gcode laser"
 
+## ⚠ Importante: MCP en WSL
+
+El MCP de KiCad corre del lado WINDOWS (backend SWIG). Al pasar paths
+desde WSL (`/mnt/c/Users/...`) el MCP los traduce a `C:\mnt\c\Users\...`
+que **NO existe** en el filesystem de Windows. Esto causa que herramientas
+como `kicad_export_pcb_svg`, `kicad_open_project`, etc. fallen con errores
+de "Board not found" o "Schematic load failed".
+
+**Solución:** esta skill NO usa el MCP para exportar. Usa **kicad-cli.exe**
+de la instalación de Windows directamente desde WSL, con paths en formato
+Windows (`C:\Users\...`). El script `export_svg.py` maneja esto
+automáticamente.
+
+### ¿Cuándo usar el MCP y cuándo no?
+
+| Herramienta | Usar en WSL? | Razón |
+|---|---|---|
+| `kicad_add_schematic_component` | ✅ Sí | Edita archivos en memoria, paths relativos |
+| `kicad_list_schematic_components` | ✅ Sí | Solo lectura, no afecta paths |
+| `kicad_batch_add_components` | ✅ Sí | Ídem |
+| `kicad_run_erc` | ✅ Sí | Ídem |
+| `kicad_export_pcb_svg` | ❌ No | Path absoluto mal traducido |
+| `kicad_open_project` | ❌ No | Ídem |
+| `export_svg.py` (esta skill) | ✅ Sí | Usa kicad-cli.exe con paths Windows |
+
+---
+
 ## Pipeline (validado 98.7% match vs workflow original)
 
 ```
@@ -24,10 +51,16 @@ python3 ~/laser-pcb-skill/scripts/usb_control.py status
 
 ## Paso 1 — Exportar SVG desde el PCB
 
-**Desde WSL (con KiCad instalado en Windows):**
+**Desde WSL con KiCad en Windows (ruta Windows-style):**
 ```bash
-python3 ~/laser-pcb-skill/scripts/export_svg.py "C:\Users\Usuario\...\mi_placa.kicad_pcb"
+python3 ~/laser-pcb-skill/scripts/export_svg.py "C:\Users\Usuario\Documents\...\mi_placa.kicad_pcb"
 ```
+
+> ⚠ En WSL, pasar el path en formato Windows (`C:\...`). NO usar paths WSL
+> (`/mnt/c/...`) porque kicad-cli.exe es un binario de Windows y no entiende
+> el filesystem virtual de WSL. Para convertir un path WSL a Windows:
+> - WSL: `/mnt/c/Users/Usuario/Desktop/mi_placa.kicad_pcb`
+> - Win: `C:\Users\Usuario\Desktop\mi_placa.kicad_pcb`
 
 **Desde Linux nativo:**
 ```bash
