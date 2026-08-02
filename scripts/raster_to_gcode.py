@@ -26,9 +26,9 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = SKILL_DIR / "output"
 
 
-def png_to_raster_gcode(png_path: Path, dpi: int = 250, feedrate: int = 1500,
+def png_to_raster_gcode(png_path: Path, dpi: int = 350, feedrate: int = 1500,
                         power: str = "S70", laser_on: str = "M4",
-                        direction: str = "unidirectional",
+                        direction: str = "bidirectional",
                         flip_y: bool = True) -> Path:
     """Convierte PNG a G-code raster. Retorna path del archivo generado.
     
@@ -134,11 +134,11 @@ def main():
         sys.exit(1)
 
     png_path = Path(sys.argv[1])
-    dpi = 250
+    dpi = 350
     feedrate = 1500
     power = "S70"
     laser_on = "M4"
-    direction = "unidirectional"
+    direction = "bidirectional"
     flip_y = True  # Default True para NEJE
 
     for arg in sys.argv[2:]:

@@ -144,12 +144,12 @@ def generate_preview(out_dir: Path):
     raster_out = out_dir / "pcb_raster.png"
     if rsvg:
         subprocess.run(
-            [rsvg, "-f", "png", "-d", "250", "-p", "250",
+            [rsvg, "-f", "png", "-d", "350", "-p", "350",
              "--background-color", "white",
              "-o", str(raster_out), str(traces)],
             capture_output=True, check=True
         )
-        print(f"  Raster PNG: {raster_out.stat().st_size:,} bytes @ 250 DPI")
+        print(f"  Raster PNG: {raster_out.stat().st_size:,} bytes @ 350 DPI")
     else:
         print("  (apt install librsvg2-bin para raster PNG)")
 
