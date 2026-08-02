@@ -125,17 +125,32 @@ def export_layer(kicad: dict, board_path: str, layers: str, output: str) -> bool
 
 
 def generate_preview(out_dir: Path):
-    """Genera PNG preview del SVG de pistas."""
+    """Genera PNG del SVG de pistas para modo raster."""
     traces = out_dir / TRACES_SVG
     if not traces.exists():
         return
+
+    # 1. PNG preview
     try:
         import cairosvg
         png_path = out_dir / "pcb_preview.png"
         cairosvg.svg2png(url=str(traces), write_to=str(png_path))
         print(f"\n  Preview PNG: {png_path.stat().st_size:,} bytes")
     except ImportError:
-        print("\n  (pip install cairosvg para preview PNG)")
+        print("\n  (pip install cairosvg para preview)")
+
+    # 2. PNG raster (alta resolución para modo raster)
+    rsvg = shutil.which("rsvg-convert")
+    raster_out = out_dir / "pcb_raster.png"
+    if rsvg:
+        subprocess.run(
+            [rsvg, "-f", "png", "-d", "250", "-p", "250",
+             "-o", str(raster_out), str(traces)],
+            capture_output=True, check=True
+        )
+        print(f"  Raster PNG: {raster_out.stat().st_size:,} bytes @ 250 DPI")
+    else:
+        print("  (apt install librsvg2-bin para raster PNG)")
 
 
 def main():
