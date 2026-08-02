@@ -1,0 +1,37 @@
+{
+  "_machine": "NEJE Master 2S Plus",
+  "_laser": "30W optical diode",
+  "_grbl": "1.1f (2018-07-15)",
+  "_laser_cmd": "M4 (de tu config LaserGRBL real)",
+  "_area": "255mm x 420mm",
+  "_pwm_range": "0-1000 (S0-S1000 = 0-30W)",
+  "_source_settings": "Extraídos de LaserGRBL v6.2.1 — valores con los que ya grabaste PCBs reales",
+  "_nota_pasadas": "A veces dabas 2 pasadas. Si la pintura no sale a la primera, repetir el mismo G-code.",
+
+  "traces": {
+    "dpi": 96,
+    "feedrate": 1000,
+    "tolerance": 0.01,
+    "on": "M4 S70",
+    "off": "M5",
+    "begin": "G21 ; mm\nG90 ; absolute\nG0 X0 Y0",
+    "end": "M5\nG0 X0 Y0"
+  },
+
+  "edge": {
+    "dpi": 96,
+    "feedrate": 800,
+    "tolerance": 0.01,
+    "on": "M4 S100",
+    "off": "M5",
+    "begin": "G21 ; mm\nG90 ; absolute\nG0 X0 Y0",
+    "end": "M5\nG0 X0 Y0"
+  },
+
+  "calibration": {
+    "_desc": "Patrón de calibración — grabar esto PRIMERO en placa de prueba",
+    "_note": "Con 30W, S70=2.1W. Buscar el S mínimo que quema bien la pintura.",
+    "power_levels": [50, 60, 70, 80, 90, 100, 120],
+    "feedrate_levels": [500, 750, 1000, 1500]
+  }
+}

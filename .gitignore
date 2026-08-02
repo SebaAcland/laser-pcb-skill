@@ -1,0 +1,14 @@
+# Output files generados por la skill
+output/pcb_*
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
