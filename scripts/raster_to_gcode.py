@@ -29,7 +29,7 @@ OUTPUT_DIR = SKILL_DIR / "output"
 def png_to_raster_gcode(png_path: Path, dpi: int = 350, feedrate: int = 1500,
                         power: str = "S70", laser_on: str = "M4",
                         direction: str = "bidirectional",
-                        flip_y: bool = True) -> Path:
+                        flip_y: bool = True, threshold: int = 128) -> Path:
     """Convierte PNG a G-code raster. Retorna path del archivo generado.
     
     flip_y: niega el eje Y en el G-code (default True para NEJE con Y invertida).
@@ -99,7 +99,7 @@ def png_to_raster_gcode(png_path: Path, dpi: int = 350, feedrate: int = 1500,
             laser_state = None
 
             for i, pixel in enumerate(scan_pixels):
-                is_dark = pixel < 128
+                is_dark = pixel < threshold
                 new_state = not is_dark
 
                 if new_state != laser_state:
@@ -139,7 +139,8 @@ def main():
     power = "S70"
     laser_on = "M4"
     direction = "bidirectional"
-    flip_y = True  # Default True para NEJE
+    flip_y = True
+    threshold = 128
 
     for arg in sys.argv[2:]:
         if arg.startswith("--dpi="):
@@ -150,12 +151,16 @@ def main():
             power = arg.split("=", 1)[1]
         elif arg.startswith("--laser="):
             laser_on = arg.split("=", 1)[1]
+        elif arg.startswith("--threshold="):
+            threshold = int(arg.split("=", 1)[1])
         elif arg == "--bidirectional":
             direction = "bidirectional"
+        elif arg == "--unidirectional":
+            direction = "unidirectional"
         elif arg == "--no-flip-y":
             flip_y = False
 
-    result = png_to_raster_gcode(png_path, dpi, feedrate, power, laser_on, direction, flip_y)
+    result = png_to_raster_gcode(png_path, dpi, feedrate, power, laser_on, direction, flip_y, threshold)
     print(f"\n✓ Listo: {result}")
 
 
