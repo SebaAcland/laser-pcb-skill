@@ -28,16 +28,43 @@ OUTPUT_DIR = SKILL_DIR / "output"
 
 def png_to_raster_gcode(png_path: Path, dpi: int = 250, feedrate: int = 1500,
                         power: str = "S70", laser_on: str = "M4",
-                        direction: str = "unidirectional") -> Path:
-    """Convierte PNG a G-code raster. Retorna path del archivo generado."""
-    img = Image.open(png_path).convert("L")  # grayscale
+                        direction: str = "unidirectional",
+                        flip_y: bool = True) -> Path:
+    """Convierte PNG a G-code raster. Retorna path del archivo generado.
+    
+    flip_y: niega el eje Y en el G-code (default True para NEJE con Y invertida).
+    """
+    img = Image.open(png_path).convert("L")
     w, h = img.size
 
     pixel_mm = 25.4 / dpi
     board_w = w * pixel_mm
     board_h = h * pixel_mm
 
+    # Validación de límites
+    if board_w > 255 or board_h > 420:
+        print(f"⚠ ADVERTENCIA: PCB {board_w:.1f}×{board_h:.1f}mm excede área 255×420mm")
+        print(f"   Reducir DPI o recortar imagen")
+        sys.exit(1)
+
+    def machine_y(y: float) -> float:
+        """Convierte coordenada Y del PNG a coordenada Y de la máquina.
+        
+        Con flip_y=True (default para NEJE):
+        - PNG Y=0 (arriba) → máquina Y=board_h (frente)
+        - PNG Y=board_h (abajo) → máquina Y=0 (fondo)
+        
+        Esto asume que el láser está en el fondo (Y=0 después de G92)
+        y la placa se extiende hacia adelante.
+        """
+        if flip_y:
+            return board_h - y
+        else:
+            return y
+
     print(f"PNG: {w}×{h}px @ {dpi} DPI = {board_w:.1f}×{board_h:.1f}mm")
+    if flip_y:
+        print(f"Y invertido (negado) para máquina con Y+ = atrás")
     print(f"Filas: {h}, Pasos por fila: {w}")
     print(f"Tiempo est: {h * board_w / feedrate * 60:.0f}s (~{h * board_w / feedrate:.1f} min)")
 
@@ -50,64 +77,46 @@ def png_to_raster_gcode(png_path: Path, dpi: int = 250, feedrate: int = 1500,
         f.write("G0 X0 Y0\n")
         f.write("M5\n\n")
 
-        last_x = 0.0
-        current_y = h * pixel_mm  # empezar desde arriba (Y max)
-
         for row in range(h):
-            # Leer fila de píxeles
             pixels = [img.getpixel((x, row)) for x in range(w)]
 
-            # Moverse al inicio de la fila
-            if direction == "unidirectional":
-                f.write(f"M5\n")
-                f.write(f"G0 X0 Y{current_y:.4f}\n")
+            y_machine = machine_y(row * pixel_mm)
+
+            if direction == "bidirectional" and row % 2 == 1:
+                # Barrido de derecha a izquierda
+                f.write("M5\n")
+                f.write(f"G0 X{board_w:.4f} Y{y_machine:.4f}\n")
+                scan_pixels = list(reversed(pixels))
+                x_start = board_w
+                x_delta = -pixel_mm
+            else:
+                # Barrido de izquierda a derecha
+                f.write("M5\n")
+                f.write(f"G0 X0 Y{y_machine:.4f}\n")
                 scan_pixels = pixels
                 x_start = 0.0
                 x_delta = pixel_mm
-            else:
-                # Bidireccional: alternar dirección
-                if row % 2 == 0:
-                    f.write(f"M5\n")
-                    f.write(f"G0 X0 Y{current_y:.4f}\n")
-                    scan_pixels = pixels
-                    x_start = 0.0
-                    x_delta = pixel_mm
-                else:
-                    f.write(f"M5\n")
-                    f.write(f"G0 X{board_w:.4f} Y{current_y:.4f}\n")
-                    scan_pixels = reversed(pixels)
-                    x_start = board_w
-                    x_delta = -pixel_mm
 
-            last_x = x_start
-            laser_state = None  # None, True, False
+            laser_state = None
 
             for i, pixel in enumerate(scan_pixels):
-                is_dark = pixel < 128  # threshold: <128 = pista (negro)
-                new_state = not is_dark  # no es oscuro → quemar
+                is_dark = pixel < 128
+                new_state = not is_dark
 
                 if new_state != laser_state:
                     if laser_state is not None:
-                        # Terminar segmento actual
                         x_pos = x_start + i * x_delta
                         f.write(f"G1 X{x_pos:.4f} F{feedrate}\n")
-                    # Cambiar estado láser
                     if new_state:
                         f.write(f"{laser_on} {power}\n")
                     else:
                         f.write("M5\n")
                     laser_state = new_state
 
-            # Terminar última línea de la fila
             if laser_state:
-                f.write(f"G1 X{board_w if direction != 'bidirectional' or row % 2 == 0 else 0:.4f} F{feedrate}\n")
-                f.write("M5\n")
-
-            # Siguiente fila
-            if direction == "unidirectional":
-                current_y -= pixel_mm
-            else:
-                current_y -= pixel_mm
+                end_x = 0.0 if (direction == "bidirectional" and row % 2 == 1) else board_w
+                f.write(f"G1 X{end_x:.4f} F{feedrate}\n")
+            f.write("M5\n")
 
             if row % 50 == 0 and row > 0:
                 print(f"  Fila {row}/{h} ({100*row/h:.0f}%)")
@@ -131,6 +140,7 @@ def main():
     power = "S70"
     laser_on = "M4"
     direction = "unidirectional"
+    flip_y = True  # Default True para NEJE
 
     for arg in sys.argv[2:]:
         if arg.startswith("--dpi="):
@@ -143,8 +153,10 @@ def main():
             laser_on = arg.split("=", 1)[1]
         elif arg == "--bidirectional":
             direction = "bidirectional"
+        elif arg == "--no-flip-y":
+            flip_y = False
 
-    result = png_to_raster_gcode(png_path, dpi, feedrate, power, laser_on, direction)
+    result = png_to_raster_gcode(png_path, dpi, feedrate, power, laser_on, direction, flip_y)
     print(f"\n✓ Listo: {result}")
 
 

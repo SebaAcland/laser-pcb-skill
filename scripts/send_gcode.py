@@ -11,21 +11,61 @@ Uso:
 import serial
 import sys
 import time
+import re
 from pathlib import Path
 
 DEFAULT_PORT = "/dev/ttyUSB0"
 BAUD = 115200
+MAX_X = 255
+MAX_Y = 420
+
+
+def validate_gcode(gcode_path: Path) -> bool:
+    """Valida que todas las coordenadas estén dentro de los límites."""
+    with open(gcode_path) as f:
+        lines = f.readlines()
+
+    violations = []
+    for i, line in enumerate(lines, 1):
+        x_match = re.search(r'X(-?\d+\.?\d*)', line)
+        y_match = re.search(r'Y(-?\d+\.?\d*)', line)
+
+        if x_match:
+            x = float(x_match.group(1))
+            if x < 0 or x > MAX_X:
+                violations.append(f"Línea {i}: X={x} fuera de rango [0,{MAX_X}]")
+
+        if y_match:
+            y = float(y_match.group(1))
+            if y < 0 or y > MAX_Y:
+                violations.append(f"Línea {i}: Y={y} fuera de rango [0,{MAX_Y}]")
+
+    if violations:
+        print(f"⚠ {len(violations)} violaciones de límites:")
+        for v in violations[:10]:
+            print(f"  {v}")
+        if len(violations) > 10:
+            print(f"  ... y {len(violations)-10} más")
+        return False
+
+    return True
 
 
 def send_file(gcode_path: Path, port: str = DEFAULT_PORT, dry_run: bool = False,
               wait_homing: bool = False) -> bool:
-    """Envía un archivo G-code a GRBL con flow control."""
+    """Envía un archivo G-code a GRBL línea por línea."""
     if not gcode_path.exists():
         print(f"ERROR: {gcode_path} no existe")
         return False
 
-    lines = []
+    # Validar límites antes de enviar
+    if not validate_gcode(gcode_path):
+        print("\n❌ G-code fuera de límites. No enviado.")
+        print("   Usar --flip-y en raster_to_gcode.py o revisar posición de placa")
+        return False
+
     with open(gcode_path) as f:
+        lines = []
         for l in f:
             l = l.strip()
             if l and not l.startswith(";"):
