@@ -13,17 +13,41 @@
 | **Homing** | $3=3, $23=1 → back-left (0,420) |
 | **Finales de carrera** | Fondo (Y=420) e izquierda (X=0) |
 
-## Sistema de Coordenadas
+## Sistema de Coordenadas (según NEJE oficial + diagrama del usuario)
 
 ```
-Homing: (0,420) = fondo-izquierda (back-left)
-Y+ = atrás (alejándose del usuario)
-Y- = adelante (hacia el usuario)
-X+ = derecha
-X- = izquierda
+       (0,420) ← Homing y límites de carrera
+          ●
+    ┌─────┴────────────────────┐
+    │                          │
+    │     NEJE 2S Plus         │
+    │     255 × 420 mm         │
+    │                          │
+    │                          │
+    │                          │  X →
+    │                          │  (eje corto, 255mm)
+    │                          │
+    └──────────────────────────┘
+    (0,0)          Y ↓        vos (YO)
+  Front-Left    (eje largo,
+                  420mm,
+                hacia adelante)
 
-Área: 0-255mm X, 0-420mm Y
-```
+• Fuente: GRBL_Homing.pdf (documento oficial NEJE)
+• Homing ($H): va a (0,420) = Rear Left
+• (0,0) = Front Left (cerca del usuario)
+• X = eje CORTO (255mm) → derecha (X+)
+• Y = eje LARGO (420mm) 
+  - Y+ = hacia ATRÁS (alejándose del usuario, de 0→420)
+  - Y- = hacia ADELANTE (hacia el usuario, de 420→0)
+• Switches de final de carrera: en Rear Left (fondo-izquierda)
+
+Importante para el G-code:
+• Con G92 X0 Y0 fijado en el fondo (después de $H):
+  - G-code Y=0 = máquina Y=420 (Rear, en los switches)
+  - G-code Y=-48 = máquina Y=372 (48mm hacia adelante, dentro de límites)
+  - El raster SIEMPRE usa Y negativo (hacia adelante) desde el fondo
+"""
 
 ## GRBL Config
 
