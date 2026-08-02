@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""position_laser.py — Posiciona el láser de forma segura para grabar PCBs.
+"""DEPRECADO — Posicionamiento y marco desde LaserGRBL (Windows).
 
-Uso:
-    python3 position_laser.py                    # homing + pregunta
-    python3 position_laser.py --back             # placa al fondo
-    python3 position_laser.py --front            # placa al frente
-    python3 position_laser.py --x 50 --y 100     # posición manual
-    python3 position_laser.py --frame            # solo dibujar marco
+Este script controlaba el láser directamente desde WSL para homing y marco.
+El control directo de GRBL desde WSL resultó inestable.
+
+Ahora: posicionar con LaserGRBL (jog), usar G-code del marco como preview.
+Se mantiene como referencia.
 """
 
 import serial

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""send_gcode.py — Envía archivos G-code al láser via GRBL.
+"""DEPRECADO — Usar LaserGRBL en Windows para enviar G-code al láser.
 
-Flow control GRBL estándar: envía línea, espera "ok", siguiente línea.
-Robusto y simple.
+Este script fue el intento inicial de controlar GRBL directamente desde WSL.
+El flow control con GRBL 1.1f resultó inestable (timeouts, desincronización
+de respuestas "ok"). LaserGRBL maneja esto de forma probada y confiable.
 
-Uso:
-    python3 send_gcode.py archivo.gcode
-    python3 send_gcode.py archivo.gcode --dry-run
+La skill ahora genera el G-code; LaserGRBL lo envía.
+Se mantiene como referencia para futuros intentos de control directo.
 """
 
 import serial

@@ -77,12 +77,15 @@ En WSL:
 
 ```
 KiCad → kicad-cli.exe (Windows) → SVG
-  → rsvg-convert --background-color white → PNG 250 DPI
-  → raster_to_gcode.py --flip-y (default) → G-code raster
-  → send_gcode.py (valida límites) → /dev/ttyUSB0 → NEJE
+  → rsvg-convert --background-color white → PNG 350 DPI
+  → raster_to_gcode.py → G-code raster (31K líneas)
+  → LaserGRBL (Windows, COM5) → NEJE
 ```
 
-Probado: PIC_DFplayer 60×48mm → PNG 591×473px → 22,648 líneas G-code → ~19 min
+**Nota**: El envío directo desde WSL (`send_gcode.py`, `position_laser.py`) 
+fue deprecado. El flow control de GRBL 1.1f desde Python/pyserial resultó 
+inestable (timeouts en respuestas "ok", desincronización de buffer). 
+LaserGRBL maneja GRBL de forma probada y confiable.
 
 ## LECCIONES APRENDIDAS
 
