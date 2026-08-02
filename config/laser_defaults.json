@@ -2,29 +2,24 @@
   "_machine": "NEJE Master 2S Plus",
   "_laser": "30W optical diode",
   "_grbl": "1.1f (2018-07-15)",
-  "_laser_cmd": "M4 (de config LaserGRBL real)",
   "_area": "255mm x 420mm",
-  "_pwm_range": "0-1000 (S0-S1000 = 0-30W)",
-  "_method": "Raster scan (PNG) para etching químico",
+  "_laser_cmd": "M4 (de config LaserGRBL real)",
+  "_method": "Raster scan (PNG) — barre toda la placa, etching químico",
   "_source": "Valores probados en LaserGRBL v6.2.1 — 0 errores en PCBs reales",
-  "_nota_pasadas": "A veces dabas 2 pasadas. Si la pintura no sale a la primera, repetir.",
 
   "raster": {
+    "_desc": "Barre toda la placa línea por línea. Blanco=quemar pintura, Negro=pista intacta.",
     "dpi": 250,
     "feedrate": 1500,
     "laser_on": "M4",
     "power": "S70",
-    "direction": "unidirectional",
-    "_desc": "Modo raster: barre toda la placa línea por línea. Blanco=quemar, Negro=pista."
+    "direction": "unidirectional"
   },
 
   "edge": {
-    "dpi": 96,
+    "_desc": "Marco de corte para alinear la placa. Usar potencia baja para preview.",
     "feedrate": 800,
-    "tolerance": 0.01,
     "on": "M4 S100",
-    "off": "M5",
-    "begin": "G21 ; mm\nG90 ; absolute\nG0 X0 Y0",
-    "end": "M5\nG0 X0 Y0"
+    "off": "M5"
   }
 }
