@@ -1,0 +1,29 @@
+{
+  "_source": "LaserGRBL.Settings.bin extra\u00eddo 2026-08-02",
+  "_lasergrbl_version": "7.14.0.0",
+  "_lasergrbl_old": "6.2.1 (usado en 2024 para PIC_DFplayer)",
+  "laser_options": {
+    "power_max": "70 (7% de S1000)",
+    "power_min": "0",
+    "laser_on": "M4",
+    "laser_off": "M5"
+  },
+  "raster_options": {
+    "tool": "RasterConversionTool",
+    "direction": "Line2Line (unidirectional?)",
+    "quality": "20.000 (line interval?)",
+    "speed_mark": "1000 (mm/min, extra\u00eddo antes)"
+  },
+  "jog": {
+    "speed": "7694 mm/min",
+    "step": "1 mm"
+  },
+  "machine": {
+    "firmware_type": "(presente en config)",
+    "streaming_mode": "(presente)",
+    "hardware_pwm": "ON",
+    "unidirectional_engraving": "ON",
+    "reset_on_connect": "ON"
+  },
+  "last_file": "PIC_DFplayer-B_Cu_pads_anchos.png (Inkscape)"
+}
