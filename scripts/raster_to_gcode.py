@@ -50,15 +50,14 @@ def png_to_raster_gcode(png_path: Path, dpi: int = 250, feedrate: int = 1500,
     def machine_y(y: float) -> float:
         """Convierte coordenada Y del PNG a coordenada Y de la máquina.
         
-        Con flip_y=True (default para NEJE):
-        - PNG Y=0 (arriba) → máquina Y=board_h (frente)
-        - PNG Y=board_h (abajo) → máquina Y=0 (fondo)
+        Con G92 X0 Y0 fijado en el fondo (machine Y=420 después del homing):
+        - PNG Y=0 (arriba) → G-code Y=-(board_h) → máquina Y=420-board_h ✓
+        - PNG Y=board_h (abajo) → G-code Y=0 → máquina Y=420 ✓
         
-        Esto asume que el láser está en el fondo (Y=0 después de G92)
-        y la placa se extiende hacia adelante.
+        Y negativo = hacia adelante (FRONT), dentro de límites.
         """
         if flip_y:
-            return board_h - y
+            return y - board_h  # negativo, va de -board_h a 0
         else:
             return y
 

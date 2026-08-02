@@ -21,33 +21,38 @@ MAX_Y = 420
 
 
 def validate_gcode(gcode_path: Path) -> bool:
-    """Valida que todas las coordenadas estén dentro de los límites."""
+    """Valida que el rango de coordenadas no exceda los límites.
+    
+    Usa rango (max - min) en vez de valores absolutos porque
+    G92 puede desplazar el origen a cualquier punto del área.
+    """
     with open(gcode_path) as f:
         lines = f.readlines()
 
-    violations = []
-    for i, line in enumerate(lines, 1):
+    x_vals, y_vals = [], []
+    for line in lines:
         x_match = re.search(r'X(-?\d+\.?\d*)', line)
         y_match = re.search(r'Y(-?\d+\.?\d*)', line)
+        if x_match: x_vals.append(float(x_match.group(1)))
+        if y_match: y_vals.append(float(y_match.group(1)))
 
-        if x_match:
-            x = float(x_match.group(1))
-            if x < 0 or x > MAX_X:
-                violations.append(f"Línea {i}: X={x} fuera de rango [0,{MAX_X}]")
-
-        if y_match:
-            y = float(y_match.group(1))
-            if y < 0 or y > MAX_Y:
-                violations.append(f"Línea {i}: Y={y} fuera de rango [0,{MAX_Y}]")
+    violations = []
+    if x_vals:
+        x_range = max(x_vals) - min(x_vals)
+        if x_range > MAX_X:
+            violations.append(f"X rango {x_range:.1f}mm excede {MAX_X}mm (min={min(x_vals):.1f}, max={max(x_vals):.1f})")
+    if y_vals:
+        y_range = max(y_vals) - min(y_vals)
+        if y_range > MAX_Y:
+            violations.append(f"Y rango {y_range:.1f}mm excede {MAX_Y}mm (min={min(y_vals):.1f}, max={max(y_vals):.1f})")
 
     if violations:
-        print(f"⚠ {len(violations)} violaciones de límites:")
-        for v in violations[:10]:
+        print(f"⚠ Violación de límites:")
+        for v in violations:
             print(f"  {v}")
-        if len(violations) > 10:
-            print(f"  ... y {len(violations)-10} más")
         return False
 
+    print(f"✓ G-code validado: X={min(x_vals):.1f}~{max(x_vals):.1f}mm, Y={min(y_vals):.1f}~{max(y_vals):.1f}mm")
     return True
 
 

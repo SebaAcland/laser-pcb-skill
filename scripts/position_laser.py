@@ -70,19 +70,24 @@ def set_zero(ser):
 
 
 def draw_frame(ser, w: float = 60, h: float = 48, power: int = 15):
-    """Dibuja un marco de referencia."""
+    """Dibuja un marco de referencia. Y va negativo (hacia adelante).
+    
+    Después de G92 en el fondo (machine Y=420):
+    - G1 Y-h = hacia adelante (Y-), dentro de límites
+    - G1 Y+h = vuelve al origen, seguro
+    """
     print(f"► Marco {w}×{h}mm (M4 S{power})...")
     ser.write(b"M5\r\n")
     time.sleep(0.1)
     ser.write(f"M4 S{power}\r\n".encode())
     time.sleep(0.2)
-    ser.write(f"G1 X{w} F800\r\n".encode())
+    ser.write(f"G1 X{w} F800\r\n".encode())   # X+, seguro (max 255)
     time.sleep(2)
-    ser.write(f"G1 Y{h} F800\r\n".encode())
+    ser.write(f"G1 Y-{h} F800\r\n".encode())  # Y-, hacia adelante (seguro)
     time.sleep(2)
-    ser.write(f"G1 X0 F800\r\n".encode())
+    ser.write(f"G1 X0 F800\r\n".encode())     # vuelve X
     time.sleep(2)
-    ser.write(f"G1 Y0 F800\r\n".encode())
+    ser.write(f"G1 Y{h} F800\r\n".encode())   # vuelve Y al origen
     time.sleep(2)
     ser.write(b"M5\r\n")
     print("  ✓ Marco dibujado")
@@ -130,8 +135,7 @@ def main():
         set_zero(ser)
         draw_frame(ser)
     elif position == "back":
-        # Placa al fondo (donde está el láser después de homing)
-        move_to(ser, 0, 420)
+        # Placa al fondo (láser ya está ahí después de homing)
         set_zero(ser)
         draw_frame(ser)
         print("\n🎯 Placa al FONDO. Marco dibujado.")
